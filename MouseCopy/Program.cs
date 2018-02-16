@@ -15,12 +15,12 @@ namespace MouseCopy
         //todo: Clipboard event opvangen, de metadata in data.json ofzo in ./clipboard/ zetten, paste event opvangen en de server data daar plakken, zien of de muis id hetzelfde blijft
         private static void Main(string[] args)
         {
-            const string clipboardDir = "./clipboard";
-            if (!Directory.Exists(clipboardDir))
-                Directory.CreateDirectory(clipboardDir);
-            Task.Run(() => new SimpleHttpServer("clipboard", 27938));
-            var ips = GetLocalIps();
-            return;
+//            const string clipboardDir = "./clipboard";
+//            if (!Directory.Exists(clipboardDir))
+//                Directory.CreateDirectory(clipboardDir);
+//            Task.Run(() => new SimpleHttpServer("clipboard", 27938));
+//            var ips = GetLocalIps();
+//            return;
 
             var withMouse = GetUsbDevices().Select(device => device.DeviceId);
             Console.WriteLine("Unplug your mouse now, when it is unplugged press any key");
