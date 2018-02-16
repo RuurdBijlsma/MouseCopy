@@ -4,10 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Management;
-using System.Net;
 using System.Net.NetworkInformation;
-using System.Net.Sockets;
-using System.Security.Authentication;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -15,7 +12,7 @@ namespace MouseCopy
 {
     internal static class Program
     {
-        //todo: Clipboard event opvangen, de metadata in data.json ofzo in ./clipboard/ zetten,
+        //todo: Clipboard event opvangen, de metadata in data.json ofzo in ./clipboard/ zetten, paste event opvangen en de server data daar plakken, zien of de muis id hetzelfde blijft
         private static void Main(string[] args)
         {
             const string clipboardDir = "./clipboard";
