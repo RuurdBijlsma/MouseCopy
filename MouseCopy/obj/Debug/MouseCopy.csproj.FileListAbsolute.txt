@@ -1,0 +1,6 @@
+C:\Users\Ruurd\RiderProjects\MouseCopy\MouseCopy\bin\Debug\MouseCopy.exe
+C:\Users\Ruurd\RiderProjects\MouseCopy\MouseCopy\bin\Debug\MouseCopy.pdb
+C:\Users\Ruurd\RiderProjects\MouseCopy\MouseCopy\obj\Debug\MouseCopy.csprojResolveAssemblyReference.cache
+C:\Users\Ruurd\RiderProjects\MouseCopy\MouseCopy\obj\Debug\MouseCopy.csproj.CoreCompileInputs.cache
+C:\Users\Ruurd\RiderProjects\MouseCopy\MouseCopy\obj\Debug\MouseCopy.exe
+C:\Users\Ruurd\RiderProjects\MouseCopy\MouseCopy\obj\Debug\MouseCopy.pdb
