@@ -1,66 +1,115 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
+using System.IO.Ports;
 using System.Linq;
-using System.Management;
+using System.Net;
 using System.Net.NetworkInformation;
+using System.Net.Sockets;
+using System.Runtime.Remoting;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Windows.Forms.VisualStyles;
 
 namespace MouseCopy
 {
     internal static class Program
     {
-        //todo: Clipboard event opvangen, de metadata in data.json ofzo in ./clipboard/ zetten, paste event opvangen en de server data daar plakken, zien of de muis id hetzelfde blijft
+        //todo: de metadata in data.json ofzo in ./clipboard/ zetten, paste event opvangen en de server data daar plakken, zien of de muis id hetzelfde blijft
         private static void Main(string[] args)
         {
-//            const string clipboardDir = "./clipboard";
-//            if (!Directory.Exists(clipboardDir))
-//                Directory.CreateDirectory(clipboardDir);
-//            Task.Run(() => new SimpleHttpServer("clipboard", 27938));
-//            var ips = GetLocalIps();
-//            return;
+            Initialize();
 
-            var withMouse = GetUsbDevices().Select(device => device.DeviceId);
-            Console.WriteLine("Unplug your mouse now, when it is unplugged press any key");
             Console.ReadKey();
-            var withoutMouse = GetUsbDevices().Select(device => device.DeviceId);
-            Console.WriteLine("You can plug your mouse back in");
-
-            Console.WriteLine(withMouse.Except(withoutMouse).First());
         }
 
-        private static IEnumerable<UsbDeviceInfo> GetUsbDevices()
+        private static async Task Initialize()
         {
-            var devices = new List<UsbDeviceInfo>();
+            var mouseId = await GetMouseId();
+            Console.WriteLine(mouseId);
 
-            ManagementObjectCollection collection;
-            using (var searcher = new ManagementObjectSearcher(@"Select * From Win32_USBHub"))
-                collection = searcher.Get();
+            var server = new Server("clipboard");
 
-            foreach (var device in collection)
+            var otherServers = await GetServers();
+            Console.WriteLine("DONE");
+
+            var clipboardManager = new ClipboardManager();
+            clipboardManager.Copy += async (sender, eventArgs) =>
             {
-                devices.Add(new UsbDeviceInfo(
-                    (string) device.GetPropertyValue("DeviceID"),
-                    (string) device.GetPropertyValue("PNPDeviceID"),
-                    (string) device.GetPropertyValue("Description")
-                ));
+                await server.SetClipboard(mouseId, clipboardManager);
+            };
+        }
+
+        private static async Task<List<string>> GetServers()
+        {
+            var ips = GetLocalIps();
+            var tasks = new List<Task<bool>>();
+            foreach (var ip in ips)
+            {
+                var task = IsServerUp(ip);
+                tasks.Add(task);
             }
 
-            collection.Dispose();
-            return devices;
+            var result = await Task.WhenAll(tasks);
+            var localIp = GetLocalIpAddress();
+            return ips.Where((ip, i) => result[i])
+                .Where(ip => ip != localIp).ToList();
         }
 
-        private static readonly object LockObj = new object();
+        private static string GetLocalIpAddress()
+        {
+            string localIp;
+            using (var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, 0))
+            {
+                socket.Connect("8.8.8.8", 65530);
+                if (socket.LocalEndPoint is IPEndPoint endPoint)
+                    localIp = endPoint.Address.ToString();
+                else
+                    throw new Exception("Could not get local ip adress");
+            }
+
+            return localIp;
+        }
+
+        private static async Task<bool> IsServerUp(string server, int port = 27938, int timeout = 5)
+        {
+            using (var client = new TcpClient() {ReceiveTimeout = timeout, SendTimeout = timeout})
+            {
+                try
+                {
+                    await client.ConnectAsync(server, port);
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    // ignored
+                }
+
+                return false;
+            }
+        }
+
+        private static IPAddress GetDefaultGateway()
+        {
+            return NetworkInterface
+                .GetAllNetworkInterfaces()
+                .Where(n => n.OperationalStatus == OperationalStatus.Up)
+                .Where(n => n.NetworkInterfaceType != NetworkInterfaceType.Loopback)
+                .SelectMany(n => n.GetIPProperties()?.GatewayAddresses)
+                .Select(g => g?.Address)
+                .FirstOrDefault(a => a != null);
+        }
 
         private static List<string> GetLocalIps()
         {
+            var gateway = GetDefaultGateway().ToString().Split('.').Take(3);
+            var ipBase = string.Join(".", gateway) + '.';
+
             var upIps = new List<string>();
             var countdown = new CountdownEvent(1);
             var sw = new Stopwatch();
             sw.Start();
-            const string ipBase = "192.168.0.";
             for (var i = 1; i < 255; i++)
             {
                 var ip = ipBase + i;
@@ -86,19 +135,31 @@ namespace MouseCopy
 
             return upIps;
         }
-    }
 
-    internal class UsbDeviceInfo
-    {
-        public UsbDeviceInfo(string deviceId, string pnpDeviceId, string description)
+        private static async Task<string> GetMouseId()
         {
-            DeviceId = deviceId;
-            PnpDeviceId = pnpDeviceId;
-            Description = description;
+            const string cmd = "wmic path  Win32_PointingDevice get * /FORMAT:Textvaluelist.xsl";
+
+            var process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    WindowStyle = ProcessWindowStyle.Hidden,
+                    FileName = "cmd.exe",
+                    Arguments = "/C " + cmd,
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false
+                }
+            };
+            process.Start();
+            var output = await process.StandardOutput.ReadToEndAsync();
+            var id = output.Split(new[] {Environment.NewLine}, StringSplitOptions.RemoveEmptyEntries)
+                .First(line => line.Contains("DeviceID"))
+                .Split(new[] {"DeviceID="}, StringSplitOptions.RemoveEmptyEntries).First();
+
+            return id;
         }
 
-        public string DeviceId { get; }
-        public string PnpDeviceId { get; }
-        public string Description { get; }
+        private static readonly object LockObj = new object();
     }
 }
