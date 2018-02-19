@@ -25,7 +25,7 @@ namespace MouseCopy
             var mouseId = await GetMouseId();
             Console.WriteLine(mouseId);
 
-            var server = new Server("clipboard");
+            var server = new Server(GetLocalIpAddress(), "clipboard");
 
             var otherServers = await GetServers(Server.Port);
             foreach (var otherServer in otherServers)

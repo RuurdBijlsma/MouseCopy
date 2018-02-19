@@ -12,14 +12,17 @@ namespace MouseCopy
     {
         private string Folder { get; }
         public const int Port = 30954;
+        public string Ip;
         private const string MetadataFile = "metadata.txt";
 
-        public Server(string directory)
+        public Server(string listenIp, string directory)
         {
             Folder = directory;
             if (!Directory.Exists(Folder))
                 Directory.CreateDirectory(Folder);
 
+            Ip = listenIp;
+            
             CreateServer();
         }
 
@@ -29,7 +32,7 @@ namespace MouseCopy
             if (!Directory.Exists(dir))
                 Directory.CreateDirectory(dir);
 
-            var ip = new IPEndPoint(IPAddress.Parse("127.0.0.1"), Port);
+            var ip = new IPEndPoint(IPAddress.Parse(Ip), Port);
             var server = new FtpServer(ip, dir);
             await server.RunAsync(CancellationToken.None);
         }
