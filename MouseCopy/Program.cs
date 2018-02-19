@@ -28,6 +28,11 @@ namespace MouseCopy
             var server = new Server("clipboard");
 
             var otherServers = await GetServers(Server.Port);
+            foreach (var otherServer in otherServers)
+            {
+                Console.WriteLine(otherServer);
+            }
+
             Console.WriteLine("DONE");
 
             var clipboardManager = new ClipboardManager();
@@ -50,8 +55,8 @@ namespace MouseCopy
 
             var result = await Task.WhenAll(tasks);
             var localIp = GetLocalIpAddress();
-            return ips.Where((ip, i) => result[i])
-                .Where(ip => ip != localIp).ToList();
+            return ips.Where((ip, i) => result[i]).ToList();
+//                .Where(ip => ip != localIp).ToList();
         }
 
         private static string GetLocalIpAddress()

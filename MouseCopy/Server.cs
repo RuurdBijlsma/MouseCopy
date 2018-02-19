@@ -47,8 +47,6 @@ namespace MouseCopy
                 case DataType.Files:
                     break;
                 case DataType.Image:
-                    await CreateTextFile(mouseId, MetadataFile, clipboard.Type.ToString());
-
                     CheckDirectory(mouseId);
                     var rawImageFormat = clipboard.Image.RawFormat;
                     var type = "png";
@@ -69,8 +67,11 @@ namespace MouseCopy
                         type = "gif";
                     }
 
-                    var imagePath = Path.Combine(Folder, mouseId, "image." + type);
+                    var fileName = "image." + type;
+                    var imagePath = Path.Combine(Folder, mouseId, fileName);
                     clipboard.Image.Save(imagePath);
+
+                    await CreateTextFile(mouseId, MetadataFile, clipboard.Type + Environment.NewLine + fileName);
                     break;
                 case DataType.Unknown:
                     break;
