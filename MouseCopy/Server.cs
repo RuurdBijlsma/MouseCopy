@@ -1,18 +1,17 @@
 ﻿using System;
 using System.Drawing.Imaging;
 using System.IO;
-using System.Reflection;
+using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
-using FubarDev.FtpServer;
-using FubarDev.FtpServer.AccountManagement;
-using FubarDev.FtpServer.FileSystem.DotNet;
+using Zhaobang.FtpServer;
 
 namespace MouseCopy
 {
     public class Server
     {
         private string Folder { get; }
+        public const int Port = 30954;
         private const string MetadataFile = "metadata.txt";
 
         public Server(string directory)
@@ -24,18 +23,15 @@ namespace MouseCopy
             CreateServer();
         }
 
-        private void CreateServer()
+        private async void CreateServer()
         {
-            // allow only anonymous logins
-            var membershipProvider = new AnonymousMembershipProvider();
+            const string dir = "clipboard";
+            if (!Directory.Exists(dir))
+                Directory.CreateDirectory(dir);
 
-            var fsProvider = new DotNetFileSystemProvider(Folder, false);
-
-            // Initialize the FTP server
-            var ftpServer = new FtpServer(fsProvider, membershipProvider, "127.0.0.1");
-
-            // Start the FTP server
-            ftpServer.Start();
+            var ip = new IPEndPoint(IPAddress.Parse("127.0.0.1"), Port);
+            var server = new FtpServer(ip, dir);
+            await server.RunAsync(CancellationToken.None);
         }
 
         public async Task SetClipboard(string mouseId, ClipboardManager clipboard)
