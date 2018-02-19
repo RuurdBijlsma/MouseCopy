@@ -1,7 +1,12 @@
 ﻿using System;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
+using System.Windows.Forms;
+using FubarDev.FtpServer;
+using FubarDev.FtpServer.AccountManagement;
+using FubarDev.FtpServer.FileSystem.DotNet;
 
 namespace MouseCopy
 {
@@ -16,7 +21,21 @@ namespace MouseCopy
             if (!Directory.Exists(Folder))
                 Directory.CreateDirectory(Folder);
 
-            Task.Run(() => new SimpleHttpServer(directory, 27938));
+            CreateServer();
+        }
+
+        private void CreateServer()
+        {
+            // allow only anonymous logins
+            var membershipProvider = new AnonymousMembershipProvider();
+
+            var fsProvider = new DotNetFileSystemProvider(Folder, false);
+
+            // Initialize the FTP server
+            var ftpServer = new FtpServer(fsProvider, membershipProvider, "127.0.0.1");
+
+            // Start the FTP server
+            ftpServer.Start();
         }
 
         public async Task SetClipboard(string mouseId, ClipboardManager clipboard)

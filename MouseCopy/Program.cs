@@ -16,7 +16,7 @@ namespace MouseCopy
 {
     internal static class Program
     {
-        //todo: de metadata in data.json ofzo in ./clipboard/ zetten, paste event opvangen en de server data daar plakken, zien of de muis id hetzelfde blijft
+        //todo: 
         private static void Main(string[] args)
         {
             Initialize();
@@ -31,23 +31,24 @@ namespace MouseCopy
 
             var server = new Server("clipboard");
 
-            var otherServers = await GetServers();
+            var otherServers = await GetServers(21);
             Console.WriteLine("DONE");
 
             var clipboardManager = new ClipboardManager();
             clipboardManager.Copy += async (sender, eventArgs) =>
             {
+                Console.WriteLine("ONCOPY");
                 await server.SetClipboard(mouseId, clipboardManager);
             };
         }
 
-        private static async Task<List<string>> GetServers()
+        private static async Task<List<string>> GetServers(int port)
         {
             var ips = GetLocalIps();
             var tasks = new List<Task<bool>>();
             foreach (var ip in ips)
             {
-                var task = IsServerUp(ip);
+                var task = IsServerUp(ip, port);
                 tasks.Add(task);
             }
 
@@ -72,7 +73,7 @@ namespace MouseCopy
             return localIp;
         }
 
-        private static async Task<bool> IsServerUp(string server, int port = 27938, int timeout = 5)
+        private static async Task<bool> IsServerUp(string server, int port, int timeout = 5)
         {
             using (var client = new TcpClient() {ReceiveTimeout = timeout, SendTimeout = timeout})
             {
