@@ -69,7 +69,7 @@ namespace MouseCopy.Model
         private static async Task AddServer(string ip, bool initConnection = false)
         {
             Console.WriteLine($"Found new server at {ip}");
-
+            
             if (!Servers.Contains(ip))
             {
                 var wsClient = await SocketClient.Connect(ip);

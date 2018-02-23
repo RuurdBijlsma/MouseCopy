@@ -11,6 +11,7 @@ namespace MouseCopy.Model.Communication
 {
     public class FtpServer
     {
+        //todo delete previous files when setting cipbaord
         public const int Port = 31313;
         private const string MetadataFile = "metadata.txt";
 
@@ -82,6 +83,7 @@ namespace MouseCopy.Model.Communication
                         BaseAddress = "ftp://" + server + ":" + Port
                     };
                     //copy contents of `directory` on local pc to `destination` on ftp
+                    CreateDirectory(client.BaseAddress, destination);
                     UploadDirectory(client, directory, destination);
                 }
         }
