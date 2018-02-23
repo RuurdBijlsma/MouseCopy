@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using vtortola.WebSockets;
 
-namespace MouseCopy
+namespace MouseCopy.Model.Communication
 {
     public sealed class SocketServer
     {

@@ -1,7 +1,7 @@
 ﻿using System;
 using vtortola.WebSockets;
 
-namespace MouseCopy
+namespace MouseCopy.Model.Communication
 {
     public class SocketEventArgs : EventArgs
     {

@@ -1,4 +1,4 @@
-﻿namespace MouseCopy
+﻿namespace MouseCopy.Model.Communication
 {
     public enum Action
     {

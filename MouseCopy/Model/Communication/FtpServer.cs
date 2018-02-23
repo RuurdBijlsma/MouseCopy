@@ -7,7 +7,7 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MouseCopy
+namespace MouseCopy.Model.Communication
 {
     public class FtpServer
     {

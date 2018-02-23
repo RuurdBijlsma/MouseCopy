@@ -8,7 +8,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MouseCopy
+namespace MouseCopy.Model.Communication
 {
     public static class LanFinder
     {

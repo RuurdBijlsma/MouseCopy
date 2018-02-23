@@ -1,6 +1,6 @@
-﻿using System;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Forms;
+using MouseCopy.Model;
 
 namespace MouseCopy
 {
@@ -11,6 +11,7 @@ namespace MouseCopy
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
+            MainWindow = new MainWindow();
             ConsoleManager.Show();
 
             _notifyIcon = new NotifyIcon
@@ -19,7 +20,11 @@ namespace MouseCopy
                 Visible = true
             };
 
+            EntryPoint.Initialize(MainWindow);
+
             CreateContextMenu();
+
+//            MainWindow.Show();
         }
 
         private void CreateContextMenu()

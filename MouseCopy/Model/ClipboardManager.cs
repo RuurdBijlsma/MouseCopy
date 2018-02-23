@@ -7,7 +7,7 @@ using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 
-namespace MouseCopy
+namespace MouseCopy.Model
 {
     public class ClipboardManager
     {

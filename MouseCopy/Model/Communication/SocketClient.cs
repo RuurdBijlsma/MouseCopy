@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 
-namespace MouseCopy
+namespace MouseCopy.Model.Communication
 {
     public class SocketClient : IDisposable
     {

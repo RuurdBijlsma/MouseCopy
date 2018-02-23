@@ -1,4 +1,4 @@
-﻿namespace MouseCopy
+﻿namespace MouseCopy.Model
 {
     public enum DataType
     {
