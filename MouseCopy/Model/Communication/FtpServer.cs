@@ -26,7 +26,8 @@ namespace MouseCopy.Model.Communication
 
             _otherServers = otherServers;
 
-            CreateServer();
+            Task.Run(()=>CreateServer());
+//            CreateServer();
             Console.WriteLine("test");
         }
 
