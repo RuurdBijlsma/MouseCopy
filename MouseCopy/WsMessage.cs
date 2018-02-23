@@ -2,7 +2,7 @@
 {
     public enum Action
     {
-        Greet
+        Connect
     }
 
     public struct WsMessage

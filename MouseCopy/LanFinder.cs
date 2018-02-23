@@ -29,7 +29,7 @@ namespace MouseCopy
             return localIp;
         }
 
-        public static async Task<List<string>> GetServersByPort(int port)
+        public static async Task<IEnumerable<string>> GetServersByPort(int port)
         {
             var ips = GetLocalIps();
             var tasks = ips.Select(ip => IsServerUp(ip, port));

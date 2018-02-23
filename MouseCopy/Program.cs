@@ -2,16 +2,22 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Runtime.CompilerServices;
+using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
-using Timer = System.Threading.Timer;
 
 namespace MouseCopy
 {
+    //todo:
+    //    detect mouse change and update clipboard
+    //    upload to all clients when copy event happens
     internal static class Program
     {
         private static readonly List<string> Servers = new List<string>();
         private static readonly List<SocketClient> SocketClients = new List<SocketClient>();
+
+        private static Timer _timer;
+        private static string LocalIp { get; } = LanFinder.GetLocalIpAddress();
 
         private static void Main(string[] args)
         {
@@ -20,41 +26,32 @@ namespace MouseCopy
             Console.ReadKey();
         }
 
-        private static async Task UpdateServers()
-        {
-            var currentServers = await LanFinder.GetServersByPort(SocketServer.Port);
-            var newServers = currentServers.Except(Servers).ToList();
-
-            Console.WriteLine($"Updating servers, {newServers.Count} new servers found");
-
-            var tasks = newServers.Select(SocketClient.Connect);
-            var newSocketClients = (await Task.WhenAll(tasks)).ToList();
-
-            newSocketClients.ForEach(async client => await client.Send(
-                new WsMessage {Action = Action.Greet, Text = "How u doin"}
-            ));
-
-            SocketClients.AddRange(newSocketClients);
-            Servers.AddRange(newServers);
-        }
-
-        private static async Task SendToAll(WsMessage message)
-        {
-            var tasks = SocketClients.Select(client => client.Send(message));
-
-            await Task.WhenAll(tasks);
-        }
-
-        private static Timer _timer;
-
         private static async Task Initialize()
         {
             var mouseId = await GetMouseId();
             Console.WriteLine(mouseId);
 
-            var ftpServer = new FtpServer(LanFinder.GetLocalIpAddress(), "clipboard");
+            var ftpServer = new FtpServer("clipboard", Servers);
+
+            await Task.Delay(1000);
+            
+            var client = new WebClient
+            {
+                BaseAddress = $"ftp://localhost:{FtpServer.Port}"
+            };
+
             var socketServer = new SocketServer();
-            socketServer.Message += (sender, args) => { Console.WriteLine("Received WS: " + args.Message.Text); };
+            socketServer.Message += async (sender, args) =>
+            {
+                switch (args.Message.Action)
+                {
+                    case Action.Connect:
+                        await AddServer(args.Message.Text);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            };
 
             var clipboardManager = new ClipboardManager();
             clipboardManager.Copy += async (sender, eventArgs) =>
@@ -63,9 +60,44 @@ namespace MouseCopy
                 await ftpServer.SetClipboard(mouseId, clipboardManager);
             };
 
-            _timer = new Timer(async state => await UpdateServers(), null, 0, 5000);
+            await UpdateServers();
 
             Console.WriteLine("DONE");
+        }
+
+        private static async Task UpdateServers()
+        {
+            var currentServers = await LanFinder.GetServersByPort(SocketServer.Port)
+                ;
+//                .Where(server => server != LocalIp);
+            var newServers = currentServers.Except(Servers).ToList();
+
+            if (newServers.Count > 0)
+                Console.WriteLine($"{newServers.Count} new server(s) found");
+
+            foreach (var server in newServers)
+                await AddServer(server, true);
+        }
+
+        private static async Task AddServer(string ip, bool initConnection = false)
+        {
+            if (!Servers.Contains(ip))
+            {
+                var wsClient = await SocketClient.Connect(ip);
+
+                if (initConnection)
+                    await wsClient.Send(new WsMessage {Action = Action.Connect, Text = LocalIp});
+
+                Servers.Add(ip);
+                SocketClients.Add(wsClient);
+            }
+        }
+
+        private static async Task SendToAll(WsMessage message)
+        {
+            var tasks = SocketClients.Select(client => client.Send(message));
+
+            await Task.WhenAll(tasks);
         }
 
 
