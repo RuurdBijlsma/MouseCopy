@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 using System.Windows.Forms;
 using MouseCopy.Model;
 
@@ -31,6 +32,7 @@ namespace MouseCopy
         {
             _notifyIcon.ContextMenuStrip = new ContextMenuStrip();
             _notifyIcon.ContextMenuStrip.Items.Add("Exit").Click += (s, e) => ExitApplication();
+            _notifyIcon.ContextMenuStrip.Items.Add("Toggle Console").Click += (s, e) => ConsoleManager.Toggle();
         }
 
         private void ExitApplication()

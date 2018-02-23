@@ -59,7 +59,6 @@ namespace MouseCopy.Model.Communication
 
         private static async Task<bool> IsServerUp(string server, int port, int timeout = 100)
         {
-            Console.WriteLine($"TCP Pinging {server}");
             var client = new TcpClient {ReceiveTimeout = timeout, SendTimeout = timeout};
             try
             {
@@ -71,18 +70,13 @@ namespace MouseCopy.Model.Communication
                 });
 
                 await client.ConnectAsync(server, port);
-//                LogFinish(server);
-
-                Console.WriteLine($"TCP Pinging {server} success");
+                
                 return true;
             }
             catch
             {
                 // ignored
             }
-
-//            LogFinish(server);
-            Console.WriteLine($"TCP Pinging {server} failed");
             return false;
         }
 

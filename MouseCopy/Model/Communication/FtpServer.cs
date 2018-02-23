@@ -12,8 +12,8 @@ namespace MouseCopy.Model.Communication
     public class FtpServer
     {
         //todo delete previous files when setting cipbaord
-        public const int Port = 31313;
-        private const string MetadataFile = "metadata.txt";
+        private const int Port = 31313;
+        public const string MetadataFile = "metadata.txt";
 
         private readonly object _lockObject = new object();
 
@@ -33,7 +33,7 @@ namespace MouseCopy.Model.Communication
         }
 
         private static Zhaobang.FtpServer.FtpServer server;
-        private string Folder { get; }
+        public string Folder { get; }
 
         private static async void CreateServer()
         {
@@ -49,7 +49,7 @@ namespace MouseCopy.Model.Communication
 
         public async Task SetClipboard(string mouseId, ClipboardManager clipboard)
         {
-            FixPath(ref mouseId);
+            FixName(ref mouseId);
             switch (clipboard.Type)
             {
                 case DataType.Text:
@@ -70,7 +70,12 @@ namespace MouseCopy.Model.Communication
                     throw new ArgumentOutOfRangeException();
             }
 
-            CopyToOtherServers(Path.Combine(Folder, mouseId), mouseId);
+            SyncMouse(mouseId);
+        }
+
+        public void SyncMouse(string mouseId)
+        {
+            CopyToOtherServers(Path.Combine(Folder, mouseId), mouseId); 
         }
 
         private void CopyToOtherServers(string directory, string destination)
@@ -162,7 +167,7 @@ namespace MouseCopy.Model.Communication
                 Directory.CreateDirectory(path);
         }
 
-        private static void FixPath(ref string path)
+        public static void FixName(ref string path)
         {
             var invalid = new string(Path.GetInvalidFileNameChars()) + new string(Path.GetInvalidPathChars());
 

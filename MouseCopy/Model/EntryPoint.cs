@@ -13,7 +13,7 @@ namespace MouseCopy.Model
     //todo:
     //    detect mouse change and update clipboard
     //    upload to all clients when copy event happens
-    //    Call copytootherservers when receive new client event via socket
+    //    Dont do anything when no mouse is connected
     internal static class EntryPoint
     {
         private static readonly List<string> Servers = new List<string>();
@@ -36,6 +36,7 @@ namespace MouseCopy.Model
                 {
                     case Action.Connect:
                         await AddServer(args.Message.Text);
+                        ftpServer.SyncMouse(mouseManager.CurrentMouseId);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
@@ -47,6 +48,15 @@ namespace MouseCopy.Model
             {
                 Console.WriteLine("ONCOPY");
                 await ftpServer.SetClipboard(mouseManager.CurrentMouseId, clipboardManager);
+            };
+
+            mouseManager.MouseChange += (sender, args) =>
+            {
+                if (args.ChangeType != MouseChangeType.Added) return;
+                
+                Console.WriteLine("New mouse detected, id: " + args.MouseId);
+                // Nieuwe muis connected, override clipboard
+                clipboardManager.SetClipboardFromMetadata(ftpServer, args.MouseId);
             };
 
             await UpdateServers();
@@ -69,7 +79,7 @@ namespace MouseCopy.Model
         private static async Task AddServer(string ip, bool initConnection = false)
         {
             Console.WriteLine($"Found new server at {ip}");
-            
+
             if (!Servers.Contains(ip))
             {
                 var wsClient = await SocketClient.Connect(ip);
