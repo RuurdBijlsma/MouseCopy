@@ -16,6 +16,7 @@ namespace MouseCopy.Model
     //    Dont do anything when no mouse is connected
     //    When nothing is on clipboard oncopy keeps firing
     //    ftpserver.setclipboard ook bij startup doen zodat de huidige clipboard erop komt
+    //    muis id is anders op laptop
     internal static class EntryPoint
     {
         private static readonly List<string> Servers = new List<string>();
