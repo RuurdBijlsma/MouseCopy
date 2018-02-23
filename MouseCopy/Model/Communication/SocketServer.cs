@@ -62,7 +62,7 @@ namespace MouseCopy.Model.Communication
 
         private async Task Listen(CancellationToken token)
         {
-            Console.WriteLine("Listening...");
+            Console.WriteLine("SocketServer starting...");
             while (!token.IsCancellationRequested)
                 try
                 {

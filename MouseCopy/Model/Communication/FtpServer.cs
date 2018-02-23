@@ -27,18 +27,21 @@ namespace MouseCopy.Model.Communication
             _otherServers = otherServers;
 
             CreateServer();
+            Console.WriteLine("test");
         }
 
+        private static Zhaobang.FtpServer.FtpServer server;
         private string Folder { get; }
 
         private static async void CreateServer()
         {
+            Console.WriteLine("FtpServer starting...");
             const string dir = "clipboard";
             if (!Directory.Exists(dir))
                 Directory.CreateDirectory(dir);
 
             var ip = new IPEndPoint(IPAddress.Any, Port);
-            var server = new Zhaobang.FtpServer.FtpServer(ip, dir);
+            server = new Zhaobang.FtpServer.FtpServer(ip, dir);
             await server.RunAsync(CancellationToken.None);
         }
 

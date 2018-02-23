@@ -15,6 +15,8 @@ namespace MouseCopy.Model
 
         public ClipboardManager(int updateInterval = 250)
         {
+            Console.WriteLine("Clipboard checker starting...");
+            
             var thread = new Thread(() =>
             {
                 while (true)

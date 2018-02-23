@@ -48,6 +48,7 @@ namespace MouseCopy.Model
                 await ftpServer.SetClipboard(mouseManager.CurrentMouseId, clipboardManager);
             };
 
+            Console.WriteLine("Searching for other servers on LAN...");
             await UpdateServers();
 
             foreach (var server in Servers) Console.WriteLine(server);
@@ -61,15 +62,14 @@ namespace MouseCopy.Model
                 .Where(server => server != LocalIp);
             var newServers = currentServers.Except(Servers).ToList();
 
-            if (newServers.Count > 0)
-                Console.WriteLine($"{newServers.Count} new server(s) found");
-
             foreach (var server in newServers)
                 await AddServer(server, true);
         }
 
         private static async Task AddServer(string ip, bool initConnection = false)
         {
+            Console.WriteLine($"Found new server at {ip}");
+
             if (!Servers.Contains(ip))
             {
                 var wsClient = await SocketClient.Connect(ip);

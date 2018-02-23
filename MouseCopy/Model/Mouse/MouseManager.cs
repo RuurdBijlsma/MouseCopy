@@ -15,7 +15,9 @@ namespace MouseCopy.Model.Mouse
 
         public MouseManager(Window window)
         {
+            Console.WriteLine("Detecting mouse changes...");
             DetectDeviceChange(window);
+            CurrentMouseId = GetMouseId();
         }
 
         public string CurrentMouseId { get; private set; }
@@ -51,9 +53,9 @@ namespace MouseCopy.Model.Mouse
 
         public event MouseEventHandler MouseChange;
 
-        private async void OnDeviceChange(MouseChangeType changeType)
+        private void OnDeviceChange(MouseChangeType changeType)
         {
-            var newId = await GetMouseId();
+            var newId = GetMouseId();
             
             if (newId == CurrentMouseId) return;
             CurrentMouseId = newId;
@@ -65,7 +67,7 @@ namespace MouseCopy.Model.Mouse
             MouseChange?.Invoke(this, e);
         }
 
-        private static async Task<string> GetMouseId()
+        private static string GetMouseId()
         {
             const string cmd = "wmic path  Win32_PointingDevice get * /FORMAT:Textvaluelist.xsl";
 
