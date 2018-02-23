@@ -55,11 +55,20 @@ namespace MouseCopy.Model.Mouse
 
         private void OnDeviceChange(MouseChangeType changeType)
         {
+            Console.WriteLine($"Device changed: {changeType}");
+
             var newId = GetMouseId();
 
-            if (newId == CurrentMouseId) return;
-            CurrentMouseId = newId;
-            OnMouseChange(new MouseEventArgs(CurrentMouseId, changeType));
+            if (newId != CurrentMouseId)
+            {
+                Console.WriteLine($"Mouse id has changed from {CurrentMouseId} to {newId}");
+                CurrentMouseId = newId;
+                OnMouseChange(new MouseEventArgs(CurrentMouseId, changeType));
+            }
+            else
+            {
+                Console.WriteLine($"Mouse id hasn't changed {newId}");
+            }
         }
 
         private void OnMouseChange(MouseEventArgs e)

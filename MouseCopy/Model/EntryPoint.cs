@@ -26,6 +26,7 @@ namespace MouseCopy.Model
         public static async void Initialize(Window window)
         {
             var mouseManager = new MouseManager(window);
+            Console.WriteLine("Current mouse id: " + mouseManager.CurrentMouseId);
 
             var ftpServer = new FtpServer("clipboard", Servers);
 
@@ -55,7 +56,7 @@ namespace MouseCopy.Model
             mouseManager.MouseChange += (sender, args) =>
             {
                 if (args.ChangeType != MouseChangeType.Added) return;
-                
+
                 Console.WriteLine("New mouse detected, id: " + args.MouseId);
                 // Nieuwe muis connected, override clipboard
                 clipboardManager.SetClipboardFromMetadata(ftpServer, args.MouseId);
