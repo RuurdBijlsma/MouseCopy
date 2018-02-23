@@ -54,7 +54,12 @@ namespace MouseCopy.Model
                 Console.WriteLine("ONCOPY");
                 await ftpServer.SetClipboard(mouseManager.CurrentMouseId, clipboardManager);
             };
-
+            
+            clipboardManager.Ready += async (sender, args) =>
+            {
+                await ftpServer.SetClipboard(mouseManager.CurrentMouseId, clipboardManager);
+            };
+            
             mouseManager.MouseChange += (sender, args) =>
             {
                 if (args.ChangeType != MouseChangeType.Added) return;

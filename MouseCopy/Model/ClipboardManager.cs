@@ -20,6 +20,7 @@ namespace MouseCopy.Model
 
             var thread = new Thread(() =>
             {
+                var first = true;
                 while (true)
                 {
                     Thread.Sleep(updateInterval);
@@ -68,6 +69,12 @@ namespace MouseCopy.Model
                             break;
                         default:
                             throw new ArgumentOutOfRangeException();
+                    }
+
+                    if (first)
+                    {
+                        OnReady(new EventArgs());
+                        first = false;
                     }
                 }
             });
@@ -151,15 +158,29 @@ namespace MouseCopy.Model
 
         public event EventHandler Copy;
 
-        protected void OnCopy(EventArgs e)
+        private void OnCopy(EventArgs e)
         {
             Copy?.Invoke(this, e);
         }
 
-        public void SetClipboardFromMetadata(FtpServer server, string mouseId)
+        public event EventHandler Ready;
+
+        private void OnReady(EventArgs e)
+        {
+            Ready?.Invoke(this, e);
+        }
+
+        public async void SetClipboardFromMetadata(FtpServer server, string mouseId)
         {
             FtpServer.FixName(ref mouseId);
             var clipboardFolder = Path.Combine(server.Folder, mouseId);
+
+            if (!Directory.Exists(clipboardFolder))
+            {
+                Console.WriteLine("Connecting brand new mouse");
+                await server.SetClipboard(mouseId, this);
+            }
+
             Console.WriteLine(clipboardFolder);
             var files = Directory.GetFiles(clipboardFolder, "*.*");
             var metadataFile = files.First(file => Path.GetFileName(file) == FtpServer.MetadataFile);
@@ -179,7 +200,7 @@ namespace MouseCopy.Model
                     // Todo files in stringcollection zetten en op clipaboar dzetten
                     break;
                 case DataType.Image:
-                    var imageFile =Path.Combine(clipboardFolder, metadataLines.First());
+                    var imageFile = Path.Combine(clipboardFolder, metadataLines.First());
                     var image = Image.FromFile(imageFile);
                     SetClipboard(image);
                     break;

@@ -109,7 +109,7 @@ namespace MouseCopy.Model.Mouse
 
             var valid = lines
                 .Where(line => line != null)
-                .Any(line => line.Contains("DeviceID"));
+                .Any(line => line.StartsWith("DeviceID"));
             if (!valid)
             {
                 return "NoMouse";
@@ -126,7 +126,9 @@ namespace MouseCopy.Model.Mouse
             var newIds = ids.Count > 1 ? ids.Except(previousIds).ToList(): ids;
             previousIds = newIds;
 
-            return previousIds.First();
+            var deviceId = previousIds.First();
+            var mouseId = deviceId.GetHashCode();
+            return mouseId.ToString();
         }
 
         private static List<string> previousIds = new List<string>();
