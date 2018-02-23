@@ -2,6 +2,10 @@
 {
     public enum DataType
     {
-        Text, Audio, Files, Image, Unknown
+        Text,
+        Audio,
+        Files,
+        Image,
+        Unknown
     }
 }

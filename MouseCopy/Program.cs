@@ -2,17 +2,15 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Net;
-using System.Net.NetworkInformation;
-using System.Net.Sockets;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace MouseCopy
 {
     internal static class Program
     {
-        //todo: 
+        private static readonly List<string> Servers = new List<string>();
+        private static readonly List<SocketClient> SocketClients = new List<SocketClient>();
+
         private static void Main(string[] args)
         {
             Initialize();
@@ -20,124 +18,43 @@ namespace MouseCopy
             Console.ReadKey();
         }
 
+        private static async Task UpdateServers()
+        {
+            var sw = new Stopwatch();
+            sw.Start();
+            var currentServers = await LanFinder.GetServersByPort(SocketServer.Port);
+            Console.WriteLine($"Time taken: {sw.ElapsedMilliseconds}");
+            var newServers = currentServers.Except(Servers).ToList();
+
+            var tasks = newServers.Select(SocketClient.Connect);
+            SocketClients.AddRange(await Task.WhenAll(tasks));
+            Servers.AddRange(newServers);
+
+            SocketClients.ForEach(client => client.Send("Hoe gaat die patat"));
+        }
+
+
         private static async Task Initialize()
         {
             var mouseId = await GetMouseId();
             Console.WriteLine(mouseId);
 
-            var server = new Server(GetLocalIpAddress(), "clipboard");
+            var ftpServer = new FtpServer(LanFinder.GetLocalIpAddress(), "clipboard");
             var socketServer = new SocketServer();
-            socketServer.Message += (sender, args) => { Console.WriteLine("event message: " + args.Message); };
-            
-            var socketClient = await SocketClient.Connect("localhost");
-            socketClient.Send("Hoe gaat de patat");
-
-//            var otherServers = await GetServers(InterCommunication.Port);
-            Console.WriteLine("DONE");
-
+            socketServer.Message += (sender, args) => { Console.WriteLine("Received ws: " + args.Message); };
 
             var clipboardManager = new ClipboardManager();
             clipboardManager.Copy += async (sender, eventArgs) =>
             {
                 Console.WriteLine("ONCOPY");
-                await server.SetClipboard(mouseId, clipboardManager);
+                await ftpServer.SetClipboard(mouseId, clipboardManager);
             };
+
+            await UpdateServers();
+
+            Console.WriteLine("DONE");
         }
 
-        private static async Task<List<string>> GetServers(int port)
-        {
-            var ips = GetLocalIps();
-            var tasks = new List<Task<bool>>();
-            foreach (var ip in ips)
-            {
-                var task = IsServerUp(ip, port);
-                tasks.Add(task);
-            }
-
-            var result = await Task.WhenAll(tasks);
-            var localIp = GetLocalIpAddress();
-            return ips.Where((ip, i) => result[i]).ToList();
-//                .Where(ip => ip != localIp).ToList();
-        }
-
-        private static string GetLocalIpAddress()
-        {
-            string localIp;
-            using (var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, 0))
-            {
-                socket.Connect("8.8.8.8", 65530);
-                if (socket.LocalEndPoint is IPEndPoint endPoint)
-                    localIp = endPoint.Address.ToString();
-                else
-                    throw new Exception("Could not get local ip adress");
-            }
-
-            return localIp;
-        }
-
-        private static async Task<bool> IsServerUp(string server, int port, int timeout = 5)
-        {
-            using (var client = new TcpClient() {ReceiveTimeout = timeout, SendTimeout = timeout})
-            {
-                try
-                {
-                    await client.ConnectAsync(server, port);
-                    return true;
-                }
-                catch (Exception e)
-                {
-                    // ignored
-                }
-
-                return false;
-            }
-        }
-
-        private static IPAddress GetDefaultGateway()
-        {
-            return NetworkInterface
-                .GetAllNetworkInterfaces()
-                .Where(n => n.OperationalStatus == OperationalStatus.Up)
-                .Where(n => n.NetworkInterfaceType != NetworkInterfaceType.Loopback)
-                .SelectMany(n => n.GetIPProperties()?.GatewayAddresses)
-                .Select(g => g?.Address)
-                .FirstOrDefault(a => a != null);
-        }
-
-        private static List<string> GetLocalIps()
-        {
-            var gateway = GetDefaultGateway().ToString().Split('.').Take(3);
-            var ipBase = string.Join(".", gateway) + '.';
-
-            var upIps = new List<string>();
-            var countdown = new CountdownEvent(1);
-            var sw = new Stopwatch();
-            sw.Start();
-            for (var i = 1; i < 255; i++)
-            {
-                var ip = ipBase + i;
-
-                var p = new Ping();
-                p.PingCompleted += (sender, e) =>
-                {
-                    if (e.Reply != null && e.Reply.Status == IPStatus.Success)
-                        lock (LockObj)
-                            upIps.Add(ip);
-                    else if (e.Reply == null)
-                        Console.WriteLine("Pinging {0} failed. (Null Reply object?)", ip);
-
-                    countdown.Signal();
-                };
-                countdown.AddCount();
-                p.SendAsync(ip, 100, ip);
-            }
-
-            countdown.Signal();
-            countdown.Wait();
-            sw.Stop();
-
-            return upIps;
-        }
 
         private static async Task<string> GetMouseId()
         {
@@ -162,7 +79,5 @@ namespace MouseCopy
 
             return id;
         }
-
-        private static readonly object LockObj = new object();
     }
 }

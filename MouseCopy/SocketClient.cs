@@ -6,14 +6,20 @@ using System.Threading.Tasks;
 
 namespace MouseCopy
 {
-    public class SocketClient
+    public class SocketClient : IDisposable
     {
         private readonly ClientWebSocket _socket;
+
         private SocketClient(ClientWebSocket socket)
         {
             _socket = socket;
         }
-        
+
+        public void Dispose()
+        {
+            _socket?.Dispose();
+        }
+
         public static async Task<SocketClient> Connect(string ip)
         {
             var ws = new ClientWebSocket();
@@ -21,7 +27,7 @@ namespace MouseCopy
 
             return new SocketClient(ws);
         }
-        
+
         public async void Send(string message)
         {
             var sendbuffer = new ArraySegment<byte>(Encoding.UTF8.GetBytes(message));

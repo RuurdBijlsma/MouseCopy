@@ -3,16 +3,14 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using vtortola.WebSockets;
-using WebSocket = vtortola.WebSockets.WebSocket;
 
 namespace MouseCopy
 {
     public sealed class SocketServer
     {
-        public const int Port = 47318;
+        public delegate void SocketEventHandler(object sender, SocketEventArgs e);
 
-        private WebSocketListener Server { get; }
-        private CancellationTokenSource Cancellation { get; } = new CancellationTokenSource();
+        public const int Port = 47318;
 
         public SocketServer()
         {
@@ -23,7 +21,8 @@ namespace MouseCopy
             Task.Run(() => Listen(Cancellation.Token));
         }
 
-        public delegate void SocketEventHandler(object sender, SocketEventArgs e);
+        private WebSocketListener Server { get; }
+        private CancellationTokenSource Cancellation { get; } = new CancellationTokenSource();
 
         public event SocketEventHandler Message;
 
@@ -65,7 +64,6 @@ namespace MouseCopy
         {
             Console.WriteLine("Listening...");
             while (!token.IsCancellationRequested)
-            {
                 try
                 {
                     var socket = await Server.AcceptWebSocketAsync(token).ConfigureAwait(false);
@@ -77,7 +75,6 @@ namespace MouseCopy
                 {
                     Console.WriteLine("Error Accepting clients: " + e.GetBaseException().Message);
                 }
-            }
 
             Console.WriteLine("Server Stop accepting clients");
         }

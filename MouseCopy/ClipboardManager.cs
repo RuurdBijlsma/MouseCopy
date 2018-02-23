@@ -11,11 +11,7 @@ namespace MouseCopy
 {
     public class ClipboardManager
     {
-        public string Text { get; private set; }
-        public Stream Audio { get; private set; }
-        public StringCollection Files { get; private set; }
-        public Image Image { get; private set; }
-        public DataType Type { get; private set; }
+        private bool _firstFire = true;
 
         public ClipboardManager(int updateInterval = 250)
         {
@@ -76,6 +72,12 @@ namespace MouseCopy
             thread.Start();
         }
 
+        public string Text { get; private set; }
+        public Stream Audio { get; private set; }
+        public StringCollection Files { get; private set; }
+        public Image Image { get; private set; }
+        public DataType Type { get; private set; }
+
         private static bool StreamEquals(Stream streamA, Stream streamB)
         {
             if (streamA == null || streamB == null)
@@ -106,13 +108,9 @@ namespace MouseCopy
             var bitmapB = new Bitmap(imageB);
 
             for (var y = 0; y < imageA.Height; y += (int) Math.Floor(imageA.Height / 8f))
-            {
-                for (var x = 0; x < imageA.Width; x += (int) Math.Floor(imageA.Width / 8f))
-                {
-                    if (bitmapA.GetPixel(x, y) != bitmapB.GetPixel(x, y))
-                        return false;
-                }
-            }
+            for (var x = 0; x < imageA.Width; x += (int) Math.Floor(imageA.Width / 8f))
+                if (bitmapA.GetPixel(x, y) != bitmapB.GetPixel(x, y))
+                    return false;
 
             return true;
         }
@@ -130,28 +128,15 @@ namespace MouseCopy
             var type = DataType.Unknown;
 
             if (Clipboard.ContainsAudio())
-            {
                 type = DataType.Audio;
-            }
             else if (Clipboard.ContainsFileDropList())
-            {
                 type = DataType.Files;
-            }
             else if (Clipboard.ContainsImage())
-            {
                 type = DataType.Image;
-            }
-            else if (Clipboard.ContainsText())
-            {
-                type = DataType.Text;
-            }
+            else if (Clipboard.ContainsText()) type = DataType.Text;
 
             return type;
         }
-
-
-
-        private bool _firstFire = true;
 
         private void CallCopyEvent()
         {
@@ -162,6 +147,7 @@ namespace MouseCopy
         }
 
         public event EventHandler Copy;
+
         protected virtual void OnCopy(EventArgs e)
         {
             Copy?.Invoke(this, e);

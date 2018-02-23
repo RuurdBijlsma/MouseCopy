@@ -4,27 +4,27 @@ using System.IO;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using Zhaobang.FtpServer;
 
 namespace MouseCopy
 {
-    public class Server
+    public class FtpServer
     {
-        private string Folder { get; }
         public const int Port = 30954;
-        public string Ip;
         private const string MetadataFile = "metadata.txt";
+        public string Ip;
 
-        public Server(string listenIp, string directory)
+        public FtpServer(string listenIp, string directory)
         {
             Folder = directory;
             if (!Directory.Exists(Folder))
                 Directory.CreateDirectory(Folder);
 
             Ip = listenIp;
-            
+
             CreateServer();
         }
+
+        private string Folder { get; }
 
         private async void CreateServer()
         {
@@ -33,7 +33,7 @@ namespace MouseCopy
                 Directory.CreateDirectory(dir);
 
             var ip = new IPEndPoint(IPAddress.Parse(Ip), Port);
-            var server = new FtpServer(ip, dir);
+            var server = new Zhaobang.FtpServer.FtpServer(ip, dir);
             await server.RunAsync(CancellationToken.None);
         }
 
@@ -54,21 +54,12 @@ namespace MouseCopy
                     var rawImageFormat = clipboard.Image.RawFormat;
                     var type = "png";
                     if (rawImageFormat.Equals(ImageFormat.Jpeg))
-                    {
                         type = "jpg";
-                    }
                     else if (rawImageFormat.Equals(ImageFormat.Png))
-                    {
                         type = "png";
-                    }
                     else if (rawImageFormat.Equals(ImageFormat.Bmp))
-                    {
                         type = "bmp";
-                    }
-                    else if (rawImageFormat.Equals(ImageFormat.Gif))
-                    {
-                        type = "gif";
-                    }
+                    else if (rawImageFormat.Equals(ImageFormat.Gif)) type = "gif";
 
                     var fileName = "image." + type;
                     var imagePath = Path.Combine(Folder, mouseId, fileName);
@@ -88,7 +79,9 @@ namespace MouseCopy
             CheckDirectory(mouseId);
             var path = Path.Combine(Folder, mouseId, fileName);
             using (var sw = File.CreateText(path))
+            {
                 await sw.WriteAsync(content);
+            }
         }
 
         private void CheckDirectory(string mouseId)
@@ -102,10 +95,7 @@ namespace MouseCopy
         {
             var invalid = new string(Path.GetInvalidFileNameChars()) + new string(Path.GetInvalidPathChars());
 
-            foreach (var c in invalid)
-            {
-                path = path.Replace(c.ToString(), "");
-            }
+            foreach (var c in invalid) path = path.Replace(c.ToString(), "");
         }
     }
 }
