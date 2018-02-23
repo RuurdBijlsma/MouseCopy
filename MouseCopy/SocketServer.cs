@@ -1,15 +1,9 @@
 ﻿using System;
-using System.Drawing.Text;
-using System.IO;
 using System.Net;
-using System.Net.WebSockets;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using vtortola.WebSockets;
 using WebSocket = vtortola.WebSockets.WebSocket;
-using WebSocketMessageType = System.Net.WebSockets.WebSocketMessageType;
 
 namespace MouseCopy
 {
