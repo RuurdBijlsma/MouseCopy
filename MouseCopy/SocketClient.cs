@@ -3,6 +3,8 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
+
 
 namespace MouseCopy
 {
@@ -28,9 +30,9 @@ namespace MouseCopy
             return new SocketClient(ws);
         }
 
-        public async void Send(string message)
+        public async Task Send(WsMessage message)
         {
-            var sendbuffer = new ArraySegment<byte>(Encoding.UTF8.GetBytes(message));
+            var sendbuffer = new ArraySegment<byte>(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(message)));
             await _socket.SendAsync(sendbuffer, WebSocketMessageType.Text, true, CancellationToken.None)
                 .ConfigureAwait(false);
         }

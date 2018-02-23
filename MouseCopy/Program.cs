@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using Timer = System.Threading.Timer;
 
 namespace MouseCopy
 {
@@ -13,26 +15,37 @@ namespace MouseCopy
 
         private static void Main(string[] args)
         {
-            Initialize();
+            Task.Run(Initialize);
 
             Console.ReadKey();
         }
 
         private static async Task UpdateServers()
         {
-            var sw = new Stopwatch();
-            sw.Start();
             var currentServers = await LanFinder.GetServersByPort(SocketServer.Port);
-            Console.WriteLine($"Time taken: {sw.ElapsedMilliseconds}");
             var newServers = currentServers.Except(Servers).ToList();
 
-            var tasks = newServers.Select(SocketClient.Connect);
-            SocketClients.AddRange(await Task.WhenAll(tasks));
-            Servers.AddRange(newServers);
+            Console.WriteLine($"Updating servers, {newServers.Count} new servers found");
 
-            SocketClients.ForEach(client => client.Send("Hoe gaat die patat"));
+            var tasks = newServers.Select(SocketClient.Connect);
+            var newSocketClients = (await Task.WhenAll(tasks)).ToList();
+
+            newSocketClients.ForEach(async client => await client.Send(
+                new WsMessage {Action = Action.Greet, Text = "How u doin"}
+            ));
+
+            SocketClients.AddRange(newSocketClients);
+            Servers.AddRange(newServers);
         }
 
+        private static async Task SendToAll(WsMessage message)
+        {
+            var tasks = SocketClients.Select(client => client.Send(message));
+
+            await Task.WhenAll(tasks);
+        }
+
+        private static Timer _timer;
 
         private static async Task Initialize()
         {
@@ -41,7 +54,7 @@ namespace MouseCopy
 
             var ftpServer = new FtpServer(LanFinder.GetLocalIpAddress(), "clipboard");
             var socketServer = new SocketServer();
-            socketServer.Message += (sender, args) => { Console.WriteLine("Received ws: " + args.Message); };
+            socketServer.Message += (sender, args) => { Console.WriteLine("Received WS: " + args.Message.Text); };
 
             var clipboardManager = new ClipboardManager();
             clipboardManager.Copy += async (sender, eventArgs) =>
@@ -50,7 +63,7 @@ namespace MouseCopy
                 await ftpServer.SetClipboard(mouseId, clipboardManager);
             };
 
-            await UpdateServers();
+            _timer = new Timer(async state => await UpdateServers(), null, 0, 5000);
 
             Console.WriteLine("DONE");
         }

@@ -6,13 +6,13 @@ namespace MouseCopy
     public class SocketEventArgs : EventArgs
     {
         // Constructor.
-        public SocketEventArgs(WebSocket socket, string message)
+        public SocketEventArgs(WebSocket socket, WsMessage message)
         {
             Message = message;
             Socket = socket;
         }
 
-        public string Message { get; }
+        public WsMessage Message { get; }
         public WebSocket Socket { get; }
     }
 }

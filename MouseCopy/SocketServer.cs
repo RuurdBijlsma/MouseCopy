@@ -2,6 +2,7 @@
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using vtortola.WebSockets;
 
 namespace MouseCopy
@@ -37,10 +38,9 @@ namespace MouseCopy
             {
                 while (socket.IsConnected && !token.IsCancellationRequested)
                 {
-                    var message = await socket.ReadStringAsync(token).ConfigureAwait(false);
+                    var messageString = await socket.ReadStringAsync(token).ConfigureAwait(false);
+                    var message = JsonConvert.DeserializeObject<WsMessage>(messageString);
                     OnMessage(new SocketEventArgs(socket, message));
-                    if (message != null)
-                        socket.WriteString(message);
                 }
             }
             catch (Exception e)
@@ -71,9 +71,9 @@ namespace MouseCopy
                     if (socket != null)
                         HandleSocket(socket, token);
                 }
-                catch (Exception e)
+                catch
                 {
-                    Console.WriteLine("Error Accepting clients: " + e.GetBaseException().Message);
+                    // ignored
                 }
 
             Console.WriteLine("Server Stop accepting clients");
