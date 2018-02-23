@@ -35,7 +35,7 @@ namespace MouseCopy.Model.Communication
 
         private static async void CreateServer()
         {
-            Console.WriteLine("FtpServer starting...");
+            Console.WriteLine($"FtpServer starting... ftp://{LanFinder.GetLocalIpAddress()}:{Port}");
             const string dir = "clipboard";
             if (!Directory.Exists(dir))
                 Directory.CreateDirectory(dir);
