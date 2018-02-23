@@ -148,7 +148,7 @@ namespace MouseCopy
 
         public event EventHandler Copy;
 
-        protected virtual void OnCopy(EventArgs e)
+        protected void OnCopy(EventArgs e)
         {
             Copy?.Invoke(this, e);
         }

@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
-using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Forms.VisualStyles;
+using System.Windows.Interop;
 
 namespace MouseCopy
 {
@@ -21,24 +23,61 @@ namespace MouseCopy
 
         private static void Main(string[] args)
         {
-            Task.Run(Initialize);
+            Initialize();
 
             Console.ReadKey();
         }
 
-        private static async Task Initialize()
+        private static void DetectDeviceChange()
+        {
+            var handle = Process.GetCurrentProcess().MainWindowHandle;
+        
+            try
+            {
+                var source = HwndSource.FromHwnd(handle);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+            
+//            if (source == null) return;
+//            
+//            var windowHandle = source.Handle;
+//            source.AddHook(HwndHandler);
+//            UsbNotification.RegisterUsbDeviceNotification(windowHandle);
+        }
+
+        private static IntPtr HwndHandler(IntPtr hwnd, int msg, IntPtr wparam, IntPtr lparam, ref bool handled)
+        {
+            if (msg == UsbNotification.WmDevicechange)
+            {
+                switch ((int)wparam)
+                {
+                    case UsbNotification.DbtDeviceremovecomplete:
+                        Console.WriteLine("removed");
+                        break;
+                    case UsbNotification.DbtDevicearrival:
+                        Console.WriteLine("added");
+                        break;
+                }
+            }
+
+            handled = false;
+            return IntPtr.Zero;
+        }
+
+        private static async void Initialize()
         {
             var mouseId = await GetMouseId();
             Console.WriteLine(mouseId);
+            DetectDeviceChange();
+
+//            var usbWatcher = new UsbWatcher();
+//            Task.Run(() => usbWatcher.Listen());
+//            usbWatcher.MouseChange += (sender, args) => { Console.WriteLine("change"); };
 
             var ftpServer = new FtpServer("clipboard", Servers);
-
-            await Task.Delay(1000);
-            
-            var client = new WebClient
-            {
-                BaseAddress = $"ftp://localhost:{FtpServer.Port}"
-            };
 
             var socketServer = new SocketServer();
             socketServer.Message += async (sender, args) =>
@@ -67,9 +106,8 @@ namespace MouseCopy
 
         private static async Task UpdateServers()
         {
-            var currentServers = await LanFinder.GetServersByPort(SocketServer.Port)
-                ;
-//                .Where(server => server != LocalIp);
+            var currentServers = (await LanFinder.GetServersByPort(SocketServer.Port))
+                .Where(server => server != LocalIp);
             var newServers = currentServers.Except(Servers).ToList();
 
             if (newServers.Count > 0)

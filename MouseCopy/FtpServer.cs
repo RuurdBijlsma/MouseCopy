@@ -4,8 +4,6 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Net;
-using System.Net.Http;
-using System.Net.Mime;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -15,6 +13,8 @@ namespace MouseCopy
     {
         public const int Port = 30954;
         private const string MetadataFile = "metadata.txt";
+
+        private readonly object _lockObject = new object();
 
         private readonly List<string> _otherServers;
 
@@ -68,12 +68,9 @@ namespace MouseCopy
             CopyToOtherServers(Path.Combine(Folder, mouseId), mouseId);
         }
 
-        private readonly object _lockObject = new object();
-
         private void CopyToOtherServers(string directory, string destination)
         {
             foreach (var server in _otherServers)
-            {
                 lock (_lockObject)
                 {
                     var client = new WebClient
@@ -83,7 +80,6 @@ namespace MouseCopy
                     //copy contents of `directory` on local pc to `destination` on ftp
                     UploadDirectory(client, directory, destination);
                 }
-            }
         }
 
         private static void UploadDirectory(WebClient client, string localDirectory, string serverDirectory)
