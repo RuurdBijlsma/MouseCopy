@@ -11,7 +11,7 @@ namespace MouseCopy.Model.Communication
 {
     public class FtpServer
     {
-        public const int Port = 30954;
+        public const int Port = 31313;
         private const string MetadataFile = "metadata.txt";
 
         private readonly object _lockObject = new object();
@@ -54,10 +54,10 @@ namespace MouseCopy.Model.Communication
                     await CreateTextFile(mouseId, MetadataFile, clipboard.Type + Environment.NewLine + clipboard.Text);
                     break;
                 case DataType.Audio:
-                    //create wav file
+                    //todo create wav file
                     break;
                 case DataType.Files:
-                    //copy files to mouse dir
+                    //todo copy files to mouse dir
                     break;
                 case DataType.Image:
                     await CreateImageFile(mouseId, "image", clipboard.Image);

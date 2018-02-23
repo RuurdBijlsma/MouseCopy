@@ -13,6 +13,7 @@ namespace MouseCopy.Model
     //todo:
     //    detect mouse change and update clipboard
     //    upload to all clients when copy event happens
+    //    Call copytootherservers when receive new client event via socket
     internal static class EntryPoint
     {
         private static readonly List<string> Servers = new List<string>();
