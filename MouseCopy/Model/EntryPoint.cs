@@ -36,7 +36,9 @@ namespace MouseCopy.Model
                 {
                     case Action.Connect:
                         await AddServer(args.Message.Text);
-                        ftpServer.SyncMouse(mouseManager.CurrentMouseId);
+                        var mouseId = mouseManager.CurrentMouseId;
+                        FtpServer.FixName(ref mouseId);
+                        ftpServer.SyncMouse(mouseId);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
