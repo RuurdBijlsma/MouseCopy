@@ -49,7 +49,6 @@ namespace MouseCopy.Model
                 await ftpServer.SetClipboard(mouseManager.CurrentMouseId, clipboardManager);
             };
 
-            Console.WriteLine("Searching for other servers on LAN...");
             await UpdateServers();
 
             foreach (var server in Servers) Console.WriteLine(server);

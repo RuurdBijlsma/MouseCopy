@@ -31,17 +31,35 @@ namespace MouseCopy.Model.Communication
 
         public static async Task<IEnumerable<string>> GetServersByPort(int port)
         {
-            var ips = GetLocalIps();
-            var tasks = ips.Select(ip => IsServerUp(ip, port));
-            var result = await Task.WhenAll(tasks);
+            Console.WriteLine("Searching for other servers on LAN...");
 
-//            var localIp = GetLocalIpAddress();
-            return ips.Where((ip, i) => result[i]).ToList();
-//                .Where(ip => ip != localIp).ToList();
+            var gateway = GetDefaultGateway().ToString().Split('.').Take(3);
+            var ipBase = string.Join(".", gateway) + '.';
+
+            var tasks = new List<Task>();
+            var ips = new List<string>();
+            const int ipRangeStart = 1;
+            for (var i = ipRangeStart; i < 255; i++)
+            {
+                var i1 = i;
+                var task = Task.Run(async () =>
+                {
+                    if (await IsServerUp(ipBase + i1, port))
+                        lock (LockObj)
+                            ips.Add(ipBase + i1);
+                });
+                tasks.Add(task);
+            }
+
+            await Task.WhenAll(tasks);
+
+            Console.WriteLine("Done searching servers");
+            return ips;
         }
 
-        private static async Task<bool> IsServerUp(string server, int port, int timeout = 50)
+        private static async Task<bool> IsServerUp(string server, int port, int timeout = 100)
         {
+            Console.WriteLine($"TCP Pinging {server}");
             var client = new TcpClient {ReceiveTimeout = timeout, SendTimeout = timeout};
             try
             {
@@ -55,6 +73,7 @@ namespace MouseCopy.Model.Communication
                 await client.ConnectAsync(server, port);
 //                LogFinish(server);
 
+                Console.WriteLine($"TCP Pinging {server} success");
                 return true;
             }
             catch
@@ -63,6 +82,7 @@ namespace MouseCopy.Model.Communication
             }
 
 //            LogFinish(server);
+            Console.WriteLine($"TCP Pinging {server} failed");
             return false;
         }
 
@@ -84,8 +104,6 @@ namespace MouseCopy.Model.Communication
 
             var upIps = new List<string>();
             var countdown = new CountdownEvent(1);
-            var sw = new Stopwatch();
-            sw.Start();
             for (var i = 1; i < 255; i++)
             {
                 var ip = ipBase + i;
@@ -109,7 +127,6 @@ namespace MouseCopy.Model.Communication
 
             countdown.Signal();
             countdown.Wait();
-            sw.Stop();
 
             return upIps;
         }

@@ -56,7 +56,7 @@ namespace MouseCopy.Model.Mouse
         private void OnDeviceChange(MouseChangeType changeType)
         {
             var newId = GetMouseId();
-            
+
             if (newId == CurrentMouseId) return;
             CurrentMouseId = newId;
             OnMouseChange(new MouseEventArgs(CurrentMouseId, changeType));
@@ -107,6 +107,7 @@ namespace MouseCopy.Model.Mouse
 
 
             var id = lines
+                .Where(line => line != null)
                 .First(line => line.Contains("DeviceID"))
                 .Split(new[] {"DeviceID="}, StringSplitOptions.RemoveEmptyEntries).First();
 
