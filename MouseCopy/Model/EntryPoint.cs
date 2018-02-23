@@ -62,9 +62,9 @@ namespace MouseCopy.Model
             
             mouseManager.MouseChange += (sender, args) =>
             {
-                if (args.ChangeType != MouseChangeType.Added) return;
+                if (args.ChangeType != MouseChangeType.Removed) return;
 
-                Console.WriteLine("New mouse detected, id: " + args.MouseId);
+                Console.WriteLine("Mouse removed, syncing mouse files to everyone: " + args.MouseId);
                 // Nieuwe muis connected, override clipboard
                 clipboardManager.SetClipboardFromMetadata(ftpServer, args.MouseId);
             };
