@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -55,19 +56,19 @@ namespace MouseCopy.Model.Mouse
 
         private void OnDeviceChange(MouseChangeType changeType)
         {
-            Console.WriteLine($"Device changed: {changeType}");
+//            Console.WriteLine($"Device changed: {changeType}");
 
             var newId = GetMouseId();
 
             if (newId != CurrentMouseId)
             {
-                Console.WriteLine($"Mouse id has changed from {CurrentMouseId} to {newId}");
+//                Console.WriteLine($"Mouse id has changed from {CurrentMouseId} to {newId}");
                 CurrentMouseId = newId;
                 OnMouseChange(new MouseEventArgs(CurrentMouseId, changeType));
             }
             else
             {
-                Console.WriteLine($"Mouse id hasn't changed {newId}");
+//                Console.WriteLine($"Mouse id hasn't changed {newId}");
             }
         }
 
@@ -115,12 +116,19 @@ namespace MouseCopy.Model.Mouse
             }
 
 
-            var id = lines
+            var ids = lines
                 .Where(line => line != null)
-                .First(line => line.Contains("DeviceID"))
-                .Split(new[] {"DeviceID="}, StringSplitOptions.RemoveEmptyEntries).First();
+                .Where(line => line.StartsWith("DeviceID"))
+                .Select(line => line.Split(new[] {"DeviceID="}, StringSplitOptions.RemoveEmptyEntries).First())
+                .ToList();
 
-            return id;
+
+            var newIds = ids.Count > 1 ? ids.Except(previousIds).ToList(): ids;
+            previousIds = newIds;
+
+            return previousIds.First();
         }
+
+        private static List<string> previousIds = new List<string>();
     }
 }

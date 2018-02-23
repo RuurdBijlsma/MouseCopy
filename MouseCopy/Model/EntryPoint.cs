@@ -14,6 +14,8 @@ namespace MouseCopy.Model
     //    detect mouse change and update clipboard
     //    upload to all clients when copy event happens
     //    Dont do anything when no mouse is connected
+    //    When nothing is on clipboard oncopy keeps firing
+    //    ftpserver.setclipboard ook bij startup doen zodat de huidige clipboard erop komt
     internal static class EntryPoint
     {
         private static readonly List<string> Servers = new List<string>();
